@@ -42,4 +42,5 @@
 .history/
 
 Debug/*
+OpenGL/Debug/*
 Dependencies/*
