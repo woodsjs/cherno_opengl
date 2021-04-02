@@ -127,10 +127,12 @@ int main(void)
 		-0.5f, -0.5f,
 		 0.5f, -0.5f,
 		 0.5f, 0.5f,
+		-0.5f, 0.5f
+	};
 
-		-0.5f, -0.5f,
-		-0.5f, 0.5f,
-		 0.5f, 0.5f,
+	unsigned int indicies[] = {
+		0, 1, 2,
+		2, 3, 0
 	};
 
 	GLuint buffer;
@@ -140,6 +142,14 @@ int main(void)
 	// buffer size
 	GLuint sizeOfBuffer = *(&positions + 1) - positions;
 	glBufferData(GL_ARRAY_BUFFER, sizeOfBuffer * sizeof(float), positions, GL_STATIC_DRAW);
+
+	GLuint ibo;
+	glGenBuffers(1, &ibo);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+
+	// buffer size
+	GLuint sizeOfIBOBuffer = *(&indicies + 1) - indicies;
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeOfIBOBuffer * sizeof(unsigned int), indicies, GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 
@@ -156,7 +166,10 @@ int main(void)
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glDrawArrays(GL_TRIANGLES, 0, sizeOfBuffer/2);
+		//glDrawArrays(GL_TRIANGLES, 0, sizeOfBuffer/2);
+
+		// the big daddy of drawing!!!!
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
