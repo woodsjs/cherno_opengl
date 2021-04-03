@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <assert.h>
 
 struct ShaderProgramSource
 {
@@ -124,6 +125,13 @@ int main(void)
 	/* Make the window's context current */
 	glfwMakeContextCurrent(window);
 
+	// we need a current context to call this, and we do. It's window
+	// this sets vsync = number of frame updates to wait before buffers are swapped
+	// less than zero immediately swaps, ready or not
+	// 0 is fast
+	// 1 stops tearing
+	glfwSwapInterval(1);
+
 	if (glewInit() != GLEW_OK)
 	{
 		std::cout << "Error!" << std::endl;
@@ -172,6 +180,16 @@ int main(void)
 
 	GLuint shader = CreateShader(source.VertexSource, source.FragmentSource);
 	glUseProgram(shader);
+	
+	// using the color uniform
+	int location = glGetUniformLocation(shader, "u_Color");
+	assert(location >= 0);
+	// 4 floats for the u_Color
+	glUniform4f(location, 0.1f, 0.0f, 0.4f, 1.0f);
+
+	// these will allow us to change the uniform color in flight
+	float red = 0.0f;
+	float increment = 0.05f;
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
@@ -181,12 +199,25 @@ int main(void)
 
 		//glDrawArrays(GL_TRIANGLES, 0, sizeOfBuffer/2);
 
+		// set our uniform color 
+		// this is u_color
+		glUniform4f(location, red, 0.0f, 0.4f, 1.0f);
+
 		// the big daddy of drawing!!!!
 		GLClearError();
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 		GLCheckError();
 
+		// now that it's drawn, we can change the color
+		if (red > 1.0f)
+			increment = -0.05f;
+		else if (red < 0.0f)
+			increment = 0.05f;
+
+		red += increment;
+
 		/* Swap front and back buffers */
+		// here our color was changed and sitting in the back buffer
 		glfwSwapBuffers(window);
 
 		/* Poll for and process events */
