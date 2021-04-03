@@ -12,6 +12,19 @@ struct ShaderProgramSource
 	std::string FragmentSource;
 };
 
+static void GLClearError()
+{
+	while (glGetError() != GL_NO_ERROR);
+}
+
+static void GLCheckError()
+{
+	while (GLenum error = glGetError())
+	{
+		std::cout << "[OpenGL Error] ( " << error << " )" << std::endl;
+	}
+}
+
 static ShaderProgramSource ParseShader(const std::string& filePath)
 {
 	std::ifstream stream(filePath);
@@ -169,7 +182,9 @@ int main(void)
 		//glDrawArrays(GL_TRIANGLES, 0, sizeOfBuffer/2);
 
 		// the big daddy of drawing!!!!
+		GLClearError();
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+		GLCheckError();
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
