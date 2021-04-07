@@ -7,24 +7,16 @@
 #include <sstream>
 #include <assert.h>
 
+#include "Renderer.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
+
 struct ShaderProgramSource
 {
 	std::string VertexSource;
 	std::string FragmentSource;
 };
 
-static void GLClearError()
-{
-	while (glGetError() != GL_NO_ERROR);
-}
-
-static void GLCheckError()
-{
-	while (GLenum error = glGetError())
-	{
-		std::cout << "[OpenGL Error] ( " << error << " )" << std::endl;
-	}
-}
 
 static ShaderProgramSource ParseShader(const std::string& filePath)
 {
@@ -114,6 +106,10 @@ int main(void)
 	if (!glfwInit())
 		return -1;
 
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
 	/* Create a windowed mode window and its OpenGL context */
 	window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
 	if (!window)
@@ -156,24 +152,20 @@ int main(void)
 		2, 3, 0
 	};
 
-	GLuint buffer;
-	glGenBuffers(1, &buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	GLuint vao;
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
 
-	// buffer size
 	GLuint sizeOfBuffer = *(&positions + 1) - positions;
-	glBufferData(GL_ARRAY_BUFFER, sizeOfBuffer * sizeof(float), positions, GL_STATIC_DRAW);
+	VertexBuffer vb(positions, sizeOfBuffer * sizeof(float));
 
-	GLuint ibo;
-	glGenBuffers(1, &ibo);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-
-	// buffer size
 	GLuint sizeOfIBOBuffer = *(&indicies + 1) - indicies;
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeOfIBOBuffer * sizeof(unsigned int), indicies, GL_STATIC_DRAW);
+	IndexBuffer ib(indicies, sizeOfIBOBuffer);
 
 	glEnableVertexAttribArray(0);
 
+	// this binds the buffer with the vao
+	// the first 0 referrs to the 0 index of the vao
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
 
 	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
@@ -187,6 +179,12 @@ int main(void)
 	// 4 floats for the u_Color
 	glUniform4f(location, 0.1f, 0.0f, 0.4f, 1.0f);
 
+	glBindVertexArray(0);
+	glUseProgram(0);
+
+	vb.Unbind();
+	ib.Unbind();
+
 	// these will allow us to change the uniform color in flight
 	float red = 0.0f;
 	float increment = 0.05f;
@@ -197,11 +195,12 @@ int main(void)
 		/* Render here */
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		//glDrawArrays(GL_TRIANGLES, 0, sizeOfBuffer/2);
+		glUseProgram(shader);
+		glUniform4f(location, red, 0.3f, 0.8f, 1.0f);
 
-		// set our uniform color 
-		// this is u_color
-		glUniform4f(location, red, 0.0f, 0.4f, 1.0f);
+		glBindVertexArray(vao);
+
+		ib.Bind();
 
 		// the big daddy of drawing!!!!
 		GLClearError();
