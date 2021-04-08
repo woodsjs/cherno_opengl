@@ -11,6 +11,9 @@
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
 
+#include "VertexArray.h"
+#include "VertexBufferLayout.h"
+
 struct ShaderProgramSource
 {
 	std::string VertexSource;
@@ -68,7 +71,7 @@ static GLuint CompileShader(const std::string& source, GLuint type)
 	{
 		int length;
 		glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-		char* message = (char*) alloca(length * sizeof(char)); 
+		char* message = (char*)alloca(length * sizeof(char));
 		glGetShaderInfoLog(id, length, &length, message);
 
 		std::cout << message << std::endl;
@@ -152,27 +155,24 @@ int main(void)
 		2, 3, 0
 	};
 
-	GLuint vao;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-
+	VertexArray va;
 	GLuint sizeOfBuffer = *(&positions + 1) - positions;
 	VertexBuffer vb(positions, sizeOfBuffer * sizeof(float));
+
+	VertexBufferLayout layout;
+	layout.Push<float>(2);
+	va.AddBuffer(vb, layout);
 
 	GLuint sizeOfIBOBuffer = *(&indicies + 1) - indicies;
 	IndexBuffer ib(indicies, sizeOfIBOBuffer);
 
-	glEnableVertexAttribArray(0);
-
-	// this binds the buffer with the vao
-	// the first 0 referrs to the 0 index of the vao
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float) * 2, 0);
+	va.Bind();
 
 	ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
 
 	GLuint shader = CreateShader(source.VertexSource, source.FragmentSource);
 	glUseProgram(shader);
-	
+
 	// using the color uniform
 	int location = glGetUniformLocation(shader, "u_Color");
 	assert(location >= 0);
@@ -198,7 +198,8 @@ int main(void)
 		glUseProgram(shader);
 		glUniform4f(location, red, 0.3f, 0.8f, 1.0f);
 
-		glBindVertexArray(vao);
+		//glBindVertexArray(vao);
+		va.Bind();
 
 		ib.Bind();
 

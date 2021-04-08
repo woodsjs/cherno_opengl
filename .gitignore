@@ -41,6 +41,7 @@
 # Local History for Visual Studio Code
 .history/
 
+Debug/*
 OpenGL/Debug/*
 **/Debug/*
 Dependencies/*
