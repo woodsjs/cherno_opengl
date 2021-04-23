@@ -11,6 +11,9 @@
 #include "Shader.h"
 #include "Texture.h"
 
+#include "glm\glm.hpp"
+#include "glm\gtc\matrix_transform.hpp"
+
 int main(void)
 {
 	GLFWwindow* window;
@@ -67,7 +70,8 @@ int main(void)
 	};
 
 	// fix for alpha images
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 	glEnable(GL_BLEND);
 
 	// This will be used to tell the renderer to draw our 
@@ -107,6 +111,8 @@ int main(void)
 	// we need the index buffer to know how to draw our vertex array attributes
 	IndexBuffer ib(indicies, sizeOfIBOBuffer);
 
+	glm::mat4 proj = glm::ortho(-2.0f, 2.0f, -1.5f, 1.5f, -1.0f, 1.0f);
+
 	va.Bind();
 
 	// shader is our program that tells us what to do per pixel
@@ -116,11 +122,12 @@ int main(void)
 	shader.SetUniform4f("u_Color", 0.1f, 0.0f, 0.4f, 1.0f);
 
 	// we're going to now grab a texture to work with. Here it's a simple PNG
-	Texture texture("res/textures/amabrick.png");
+	Texture texture("res/textures/blender_decimate_modifier.png");
 	texture.Bind();
 	// the int should be the same as texture.Bind.  Here we use default, zero
 	// and yes, we pass the bound texture to the shader to render over the geometry
 	shader.SetUniform1i("u_Texture", 0);
+	shader.SetUniformMat4f("u_MVP", proj);
 
 	va.Unbind();
 	shader.Unbind();
